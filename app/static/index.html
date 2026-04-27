@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rally Coach</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <header>
+    <div class="container flex-between">
+      <div class="logo">Rally<span>Coach</span></div>
+    </div>
+  </header>
+
+  <div class="container page">
+    <div class="section-header">Upload Session</div>
+
+    <div class="card" style="max-width:560px;">
+      <div class="upload-zone" id="dropZone">
+        <div class="icon">🎾</div>
+        <div style="font-weight:600;">Drop a video file here</div>
+        <p>or click to browse</p>
+        <div class="hint">MP4, MOV, AVI · 60fps recommended</div>
+        <input type="file" id="fileInput" accept="video/*" />
+      </div>
+      <div id="uploadStatus" style="display:none; margin-top:14px;">
+        <div id="uploadMsg" style="font-size:13px; color:var(--muted);"></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <div class="flex-between" style="margin-bottom:14px;">
+        <div class="section-header" style="margin:0;">Sessions</div>
+        <button class="btn btn-secondary btn-sm" onclick="loadSessions()">Refresh</button>
+      </div>
+      <div class="card" style="padding:0;">
+        <div id="sessionsContainer">
+          <div class="empty-state">Loading sessions…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/upload.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.DS_Store
+
+# runtime storage
+storage/uploads/
+storage/processed/
+storage/sessions.db
+
+# model weights
+weights/*.pt
+weights/*.onnx
+!weights/.gitkeep
+
+# test fixtures (large files)
+tests/fixtures/*.mp4
+tests/fixtures/*.avi

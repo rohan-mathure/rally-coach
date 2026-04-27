@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rally Coach — Session</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="container flex-between">
+      <div class="logo"><a href="/" style="color:inherit;text-decoration:none;">Rally<span style="color:var(--accent)">Coach</span></a></div>
+      <div id="sessionTitle" style="color:var(--muted);font-size:13px;"></div>
+    </div>
+  </header>
+
+  <div class="container page">
+    <!-- KPI Row -->
+    <div class="kpi-row" id="kpiRow">
+      <div class="kpi-card"><div class="kpi-label">Total Shots</div><div class="kpi-value info" id="kpiShots">—</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Speed</div><div class="kpi-value info" id="kpiSpeed">—</div></div>
+      <div class="kpi-card"><div class="kpi-label">In-Bounds</div><div class="kpi-value good" id="kpiInBounds">—</div></div>
+      <div class="kpi-card"><div class="kpi-label">Net Clearance</div><div class="kpi-value good" id="kpiNetClear">—</div></div>
+    </div>
+
+    <!-- Main grid -->
+    <div class="session-grid">
+      <!-- Left: video -->
+      <div>
+        <div class="video-wrap card" style="padding:0;">
+          <video id="mainVideo" controls preload="metadata">
+            <source id="videoSrc" type="video/mp4" />
+            Video unavailable or still processing.
+          </video>
+        </div>
+
+        <!-- Court map -->
+        <div class="card mt-4">
+          <div class="flex-between" style="margin-bottom:12px;">
+            <div class="card-title" style="margin:0;">Court Map</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-sm" onclick="courtViz.filterType('all')">All</button>
+              <button class="btn btn-secondary btn-sm" onclick="courtViz.filterType('forehand')">FH</button>
+              <button class="btn btn-secondary btn-sm" onclick="courtViz.filterType('backhand')">BH</button>
+              <button class="btn btn-secondary btn-sm" onclick="courtViz.filterType('volley')">VOL</button>
+            </div>
+          </div>
+          <canvas id="court-canvas" width="300" height="480"></canvas>
+        </div>
+      </div>
+
+      <!-- Right: charts + table -->
+      <div>
+        <div class="charts-grid">
+          <div class="card">
+            <div class="card-title">Shot Type</div>
+            <canvas id="chartShotType" height="180"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title">Spin Type</div>
+            <canvas id="chartSpinType" height="180"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title">Speed Distribution (mph)</div>
+            <canvas id="chartSpeed" height="180"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title">Quality Distribution</div>
+            <canvas id="chartQuality" height="180"></canvas>
+          </div>
+        </div>
+
+        <!-- Shot table -->
+        <div class="card mt-4" style="padding:0;">
+          <div class="flex-between" style="padding:14px 16px;">
+            <div class="card-title" style="margin:0;">Shots</div>
+            <button class="btn btn-secondary btn-sm" onclick="exportCsv()">Export CSV</button>
+          </div>
+          <div style="overflow-x:auto;max-height:420px;overflow-y:auto;">
+            <table class="shot-table" id="shotTable">
+              <thead>
+                <tr>
+                  <th onclick="sortBy('shot_number')">#</th>
+                  <th onclick="sortBy('start_time_sec')">Time</th>
+                  <th onclick="sortBy('shot_type')">Type</th>
+                  <th onclick="sortBy('spin_type')">Spin</th>
+                  <th onclick="sortBy('speed_mph')">Speed</th>
+                  <th onclick="sortBy('rpm_estimate')">RPM</th>
+                  <th onclick="sortBy('net_clearance_inches')">Net (in)</th>
+                  <th onclick="sortBy('is_in')">In/Out</th>
+                  <th onclick="sortBy('quality_score')">Q</th>
+                </tr>
+              </thead>
+              <tbody id="shotRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/court_viz.js"></script>
+  <script src="/static/js/session.js"></script>
+</body>
+</html>
