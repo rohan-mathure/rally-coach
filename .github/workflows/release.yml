@@ -28,7 +28,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
       - run: npm ci
         working-directory: desktop
       - run: npm run lint
@@ -61,7 +60,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
 
       - name: Install Python dependencies
         run: pip install -e . pyinstaller
@@ -100,7 +98,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
 
       - name: Install Python dependencies
         run: pip install -e . pyinstaller
@@ -139,7 +136,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
 
       - name: Install Python dependencies
         run: pip install -e . pyinstaller
@@ -177,7 +173,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
 
       - name: Install system libs for OpenCV / mediapipe
         run: |
