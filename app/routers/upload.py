@@ -5,6 +5,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 from app.config import settings
 from app.database import get_db
@@ -54,4 +55,35 @@ async def upload_session(
 
     background_tasks.add_task(_run_pipeline, session_id, dest)
 
+    return {"session_id": session_id, "status": "queued"}
+
+
+class LocalPathRequest(BaseModel):
+    path: str
+
+
+@router.post("/from-path", status_code=201)
+async def upload_from_local_path(
+    background_tasks: BackgroundTasks,
+    body: LocalPathRequest,
+):
+    """Electron desktop: register a video by local filesystem path (no streaming)."""
+    src = Path(body.path)
+    if not src.exists():
+        raise HTTPException(status_code=400, detail=f"File not found: {body.path}")
+    if src.suffix.lower() not in {".mp4", ".mov", ".avi", ".m4v", ".mkv", ".webm"}:
+        raise HTTPException(status_code=400, detail="Unsupported video format")
+
+    session_id = str(uuid.uuid4())
+    dest = settings.uploads_dir / f"{session_id}{src.suffix}"
+    shutil.copy2(src, dest)
+
+    session = Session(
+        session_id=session_id,
+        filename=src.name,
+        uploaded_at=datetime.now(timezone.utc),
+        status="queued",
+    )
+    await _save_session(session)
+    background_tasks.add_task(_run_pipeline, session_id, dest)
     return {"session_id": session_id, "status": "queued"}
