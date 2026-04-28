@@ -1,0 +1,242 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write   # needed to create the GitHub release
+
+jobs:
+  # ── Gate: must pass CI before building ────────────────────────────────────
+  lint-python:
+    name: Lint Python
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip }
+      - run: pip install "ruff>=0.5.0"
+      - run: ruff check .
+
+  lint-desktop:
+    name: Lint Desktop
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - run: npm ci
+        working-directory: desktop
+      - run: npm run lint
+        working-directory: desktop
+      - run: npm run typecheck
+        working-directory: desktop
+
+  test-python:
+    name: Test Python
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip }
+      - run: pip install -e ".[test]"
+      - run: pytest tests/ -v --tb=short
+
+  # ── Platform builds ────────────────────────────────────────────────────────
+  build-mac-arm:
+    name: Build macOS (arm64)
+    runs-on: macos-14
+    needs: [lint-python, lint-desktop, test-python]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install Python dependencies
+        run: pip install -e . pyinstaller
+
+      - name: Build Python server binary
+        run: bash desktop/scripts/build-backend.sh
+
+      - name: Install Node dependencies
+        working-directory: desktop
+        run: npm ci
+
+      - name: Build and package Electron app (macOS arm64)
+        working-directory: desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"   # skip code signing; set CSC_LINK to enable
+        run: npm run build && npx electron-builder --mac --arm64 --publish never
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rally-coach-mac-arm64
+          path: desktop/dist/*.dmg
+          if-no-files-found: error
+
+  build-mac-x64:
+    name: Build macOS (x64)
+    runs-on: macos-13
+    needs: [lint-python, lint-desktop, test-python]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install Python dependencies
+        run: pip install -e . pyinstaller
+
+      - name: Build Python server binary
+        run: bash desktop/scripts/build-backend.sh
+
+      - name: Install Node dependencies
+        working-directory: desktop
+        run: npm ci
+
+      - name: Build and package Electron app (macOS x64)
+        working-directory: desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npm run build && npx electron-builder --mac --x64 --publish never
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rally-coach-mac-x64
+          path: desktop/dist/*.dmg
+          if-no-files-found: error
+
+  build-win:
+    name: Build Windows
+    runs-on: windows-latest
+    needs: [lint-python, lint-desktop, test-python]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install Python dependencies
+        run: pip install -e . pyinstaller
+
+      - name: Build Python server binary
+        shell: bash
+        run: bash desktop/scripts/build-backend.sh
+
+      - name: Install Node dependencies
+        working-directory: desktop
+        run: npm ci
+
+      - name: Build and package Electron app (Windows)
+        working-directory: desktop
+        run: npm run build && npx electron-builder --win --publish never
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rally-coach-windows
+          path: desktop/dist/*.exe
+          if-no-files-found: error
+
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-22.04
+    needs: [lint-python, lint-desktop, test-python]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install system libs for OpenCV / mediapipe
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 libglib2.0-0 libsm6 libxext6 libxrender-dev \
+            libgtk-3-0 libnotify4 libnss3 libxss1 libasound2
+
+      - name: Install Python dependencies
+        run: pip install -e . pyinstaller
+
+      - name: Build Python server binary
+        run: bash desktop/scripts/build-backend.sh
+
+      - name: Install Node dependencies
+        working-directory: desktop
+        run: npm ci
+
+      - name: Build and package Electron app (Linux)
+        working-directory: desktop
+        run: npm run build && npx electron-builder --linux --publish never
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rally-coach-linux
+          path: desktop/dist/*.AppImage
+          if-no-files-found: error
+
+  # ── Create GitHub release with all binaries ────────────────────────────────
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-22.04
+    needs: [build-mac-arm, build-mac-x64, build-win, build-linux]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history for changelog
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: List release artifacts
+        run: find release-artifacts -type f | sort
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Rally Coach ${{ github.ref_name }}"
+          generate_release_notes: true
+          files: |
+            release-artifacts/**/*.dmg
+            release-artifacts/**/*.exe
+            release-artifacts/**/*.AppImage
+          fail_on_unmatched_files: true

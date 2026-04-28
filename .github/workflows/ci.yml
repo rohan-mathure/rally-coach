@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags-ignore: ["v*"]   # release.yml handles tags
+  pull_request:
+
+jobs:
+  lint-python:
+    name: Lint Python (ruff)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install ruff
+        run: pip install "ruff>=0.5.0"
+
+      - name: Run ruff
+        run: ruff check .
+
+  lint-desktop:
+    name: Lint Desktop (ESLint + tsc)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install dependencies
+        working-directory: desktop
+        run: npm ci
+
+      - name: ESLint
+        working-directory: desktop
+        run: npm run lint
+
+      - name: TypeScript type-check
+        working-directory: desktop
+        run: npm run typecheck
+
+  test-python:
+    name: Test Python (pytest)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install test dependencies
+        # Uses the [test] extra — only filterpy/numpy/scipy/pytest.
+        # Skips heavy CV stack (ultralytics, mediapipe, opencv) to keep CI fast.
+        run: pip install -e ".[test]"
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
