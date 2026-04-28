@@ -54,7 +54,11 @@ export function SessionScreen() {
   function exportCsv() {
     if (!id) return;
     const url = getCsvUrl(id);
-    window.electronAPI?.openExternal(url) ?? window.open(url);
+    if (window.electronAPI) {
+      window.electronAPI.openExternal(url);
+    } else {
+      window.open(url);
+    }
   }
 
   if (loading || !session) {

@@ -45,8 +45,9 @@ export function HomeScreen() {
       setUploadMsg("Upload complete — processing…");
       await load();
       navigate(`/session/${session_id}`);
-    } catch (err: any) {
-      setUploadMsg(`Upload failed: ${err?.message ?? "unknown error"}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "unknown error";
+      setUploadMsg(`Upload failed: ${msg}`);
     } finally {
       setUploading(false);
     }
@@ -66,8 +67,9 @@ export function HomeScreen() {
       const name = path.split(/[/\\]/).pop() ?? "video.mp4";
       const file = new File([blob], name, { type: blob.type || "video/mp4" });
       await handleFile(file);
-    } catch (err: any) {
-      setUploadMsg(`Failed to read file: ${err?.message}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setUploadMsg(`Failed to read file: ${msg}`);
       setUploading(false);
     }
   }

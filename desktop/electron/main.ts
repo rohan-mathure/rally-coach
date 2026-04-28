@@ -9,7 +9,6 @@ import {
 import { join } from "path";
 import { spawn, ChildProcess } from "child_process";
 import * as net from "net";
-import * as fs from "fs";
 
 let mainWindow: BrowserWindow | null = null;
 let serverProcess: ChildProcess | null = null;
@@ -42,7 +41,6 @@ function getServerBinary(): { bin: string; args: string[] } {
   }
 
   // Dev: run uvicorn from repo root
-  const repoRoot = join(__dirname, "..", "..", "..");
   return {
     bin: "python3",
     args: ["-m", "uvicorn", "app.main:app", "--host", "127.0.0.1"],
