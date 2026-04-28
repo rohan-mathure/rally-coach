@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from pipeline.utils.video_io import VideoReader
 
 

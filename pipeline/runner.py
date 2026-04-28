@@ -1,5 +1,4 @@
 import json
-import statistics
 from pathlib import Path
 
 from loguru import logger
@@ -7,19 +6,19 @@ from loguru import logger
 from app.config import settings
 from app.database import get_db
 from app.models.shot import Shot
-from pipeline.stages.frame_extractor import extract_metadata
-from pipeline.stages.court_detector import detect_court
+from pipeline.stages.annotator import annotate_video
 from pipeline.stages.ball_tracker import track_balls
 from pipeline.stages.bounce_detector import detect_bounces
-from pipeline.stages.shot_segmenter import segment_shots
+from pipeline.stages.court_detector import detect_court
+from pipeline.stages.frame_extractor import extract_metadata
+from pipeline.stages.inout_classifier import classify_inout
+from pipeline.stages.net_clearance import compute_net_clearance
 from pipeline.stages.pose_analyzer import extract_poses
 from pipeline.stages.shot_classifier import classify_shots
-from pipeline.stages.spin_analyzer import analyze_spin
-from pipeline.stages.speed_estimator import estimate_speeds
-from pipeline.stages.net_clearance import compute_net_clearance
-from pipeline.stages.inout_classifier import classify_inout
 from pipeline.stages.shot_quality import compute_quality_scores
-from pipeline.stages.annotator import annotate_video
+from pipeline.stages.shot_segmenter import segment_shots
+from pipeline.stages.speed_estimator import estimate_speeds
+from pipeline.stages.spin_analyzer import analyze_spin
 from pipeline.utils.video_io import VideoReader
 
 COURT_REVALIDATE_INTERVAL = 300   # frames

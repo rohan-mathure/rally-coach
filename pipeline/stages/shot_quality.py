@@ -1,6 +1,7 @@
 import statistics
+
 from app.models.shot import Shot
-from pipeline.utils.court_constants import COURT_LENGTH_FT, SINGLES_HALF_WIDTH_FT
+from pipeline.utils.court_constants import COURT_LENGTH_FT
 
 # Target zone: deep 25% of opponent's half (between service line and baseline)
 TARGET_Y_MIN = COURT_LENGTH_FT * 0.625   # ~48.75 ft

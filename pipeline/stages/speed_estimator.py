@@ -1,10 +1,9 @@
 import math
-import numpy as np
-from loguru import logger
 
-from app.models.shot import Shot, BallPosition
+import numpy as np
+
+from app.models.shot import Shot
 from pipeline.models.homography import CourtHomography
-from pipeline.utils.court_constants import COURT_LENGTH_FT
 
 POST_CONTACT_FRAMES = 5
 CAMERA_ANGLE_CORRECTION = 1.12   # compensates for perspective foreshortening
@@ -15,7 +14,7 @@ SECONDS_PER_HOUR = 3600.0
 def _baseline_pixel_length(homography: CourtHomography, frame_width: int, frame_height: int) -> float:
     """Approximate pixel length of court baseline using homography inverse."""
     # Near baseline corners in court coords
-    from pipeline.utils.court_constants import SINGLES_HALF_WIDTH_FT, COURT_LENGTH_FT
+    from pipeline.utils.court_constants import SINGLES_HALF_WIDTH_FT
     left_px = homography.court_to_pixel(-SINGLES_HALF_WIDTH_FT, 0.0)
     right_px = homography.court_to_pixel(SINGLES_HALF_WIDTH_FT, 0.0)
     return math.hypot(right_px[0] - left_px[0], right_px[1] - left_px[1])

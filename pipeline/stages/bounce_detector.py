@@ -1,6 +1,6 @@
 import numpy as np
-from scipy.signal import savgol_filter, argrelmin
 from loguru import logger
+from scipy.signal import argrelmin, savgol_filter
 
 from app.models.shot import BallPosition, BounceEvent
 from pipeline.models.homography import CourtHomography
@@ -18,7 +18,6 @@ def detect_bounces(
     if len(positions) < 15:
         return []
 
-    frames = np.array([p.frame_idx for p in positions])
     ys = np.array([p.y for p in positions])  # pixel y increases downward
 
     # Smooth y trajectory
@@ -52,8 +51,11 @@ def detect_bounces(
             court_x, court_y = cx, cy
             # Ball should be between baselines and close to ground plane
             if 0 <= court_y <= COURT_LENGTH_FT:
-                from pipeline.utils.court_constants import SINGLES_BOUNDS, CLOSE_CALL_THRESHOLD_FT
-                from pipeline.utils.geometry import point_in_polygon, min_distance_to_polygon_boundary
+                from pipeline.utils.court_constants import CLOSE_CALL_THRESHOLD_FT, SINGLES_BOUNDS
+                from pipeline.utils.geometry import (
+                    min_distance_to_polygon_boundary,
+                    point_in_polygon,
+                )
                 is_in = point_in_polygon((cx, cy), SINGLES_BOUNDS)
                 dist = min_distance_to_polygon_boundary((cx, cy), SINGLES_BOUNDS)
                 is_close = dist < CLOSE_CALL_THRESHOLD_FT

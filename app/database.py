@@ -1,5 +1,5 @@
-import json
 import aiosqlite
+
 from app.config import settings
 
 

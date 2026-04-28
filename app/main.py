@@ -2,11 +2,11 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.database import init_db
-from app.routers import upload, sessions, shots, video
+from app.routers import sessions, shots, upload, video
 
 
 @asynccontextmanager

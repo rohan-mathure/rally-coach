@@ -1,6 +1,6 @@
 import math
+
 import numpy as np
-from loguru import logger
 
 from app.models.shot import Shot
 
@@ -68,7 +68,6 @@ def analyze_spin(shots: list[Shot], fps: float) -> list[Shot]:
         rpm_estimate = None
         if shot.speed_mph is not None and shot.speed_mph >= MIN_SPEED_MPH:
             v_ms = _mph_to_ms(shot.speed_mph)
-            flight_time = ts[-1] if ts[-1] > 0 else 1.0
             # Approximate Magnus force from vertical curvature deviation
             # F = m * Δa where Δa is the extra vertical acceleration
             delta_a = 2 * coeffs[0] / (fps ** 2)  # second derivative of parabola → px/s²

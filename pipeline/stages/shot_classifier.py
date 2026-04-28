@@ -1,6 +1,5 @@
-from app.models.shot import Shot, BallPosition
+from app.models.shot import Shot
 from pipeline.models.homography import CourtHomography
-from pipeline.utils.court_constants import HALF_COURT_FT, NET_HEIGHT_CENTER_FT
 
 
 def _classify_from_pose(shot: Shot, homography: CourtHomography | None) -> tuple[str, float]:

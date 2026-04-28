@@ -1,5 +1,7 @@
 import json
+
 from fastapi import APIRouter, HTTPException
+
 from app.database import get_db
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
@@ -41,8 +43,9 @@ async def manual_calibrate(session_id: str, corners: list[list[float]]):
     if len(corners) != 4 or any(len(c) != 2 for c in corners):
         raise HTTPException(status_code=400, detail="Provide exactly 4 [x,y] corners")
 
-    import numpy as np
     import cv2
+    import numpy as np
+
     from pipeline.utils.court_constants import ITF_CORNERS_FEET
 
     src = np.array(corners, dtype=np.float32)

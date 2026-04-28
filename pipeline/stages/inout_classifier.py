@@ -1,7 +1,7 @@
 from app.models.shot import Shot
 from pipeline.models.homography import CourtHomography
-from pipeline.utils.court_constants import SINGLES_BOUNDS, CLOSE_CALL_THRESHOLD_FT
-from pipeline.utils.geometry import point_in_polygon, min_distance_to_polygon_boundary
+from pipeline.utils.court_constants import CLOSE_CALL_THRESHOLD_FT, SINGLES_BOUNDS
+from pipeline.utils.geometry import min_distance_to_polygon_boundary, point_in_polygon
 
 
 def classify_inout(shots: list[Shot], homography: CourtHomography | None) -> list[Shot]:

@@ -3,6 +3,7 @@ Entry point for PyInstaller-bundled server.
 Supports --port argument so Electron can pass a dynamically chosen port.
 """
 import argparse
+
 import uvicorn
 
 

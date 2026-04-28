@@ -1,5 +1,5 @@
-from pipeline.utils.geometry import point_in_polygon, min_distance_to_polygon_boundary
 from pipeline.utils.court_constants import SINGLES_BOUNDS
+from pipeline.utils.geometry import min_distance_to_polygon_boundary, point_in_polygon
 
 
 def test_center_court_is_in():

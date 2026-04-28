@@ -1,5 +1,4 @@
 import numpy as np
-from loguru import logger
 
 from app.models.shot import Shot
 from pipeline.models.homography import CourtHomography
@@ -15,9 +14,6 @@ def compute_net_clearance(shots: list[Shot], homography: CourtHomography | None)
     net_right_px = homography.court_to_pixel(13.5, HALF_COURT_FT)
     net_pixel_y = (net_left_px[1] + net_right_px[1]) / 2  # average net center y in pixels
 
-    # Net top in pixel coords (net_height = 3ft above baseline level)
-    # We compare ball position at net x to the net top pixel y
-    net_top_left_px = homography.court_to_pixel(-13.5, HALF_COURT_FT)
     # Rough scale: court length in pixels
     far_base_px = homography.court_to_pixel(0.0, 78.0)
     near_base_px = homography.court_to_pixel(0.0, 0.0)

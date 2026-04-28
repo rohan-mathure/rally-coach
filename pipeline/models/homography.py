@@ -1,6 +1,5 @@
-import numpy as np
 import cv2
-from pipeline.utils.court_constants import ITF_CORNERS_FEET
+import numpy as np
 
 
 class CourtHomography:

@@ -1,7 +1,7 @@
 import numpy as np
 from loguru import logger
 
-from app.models.shot import Shot, PoseLandmarks
+from app.models.shot import PoseLandmarks, Shot
 from pipeline.utils.video_io import VideoReader
 
 POSE_WINDOW = 30  # frames either side of contact to search

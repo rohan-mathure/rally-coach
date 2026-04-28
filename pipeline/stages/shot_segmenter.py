@@ -1,7 +1,8 @@
 import uuid
+
 import numpy as np
-from scipy.signal import savgol_filter
 from loguru import logger
+from scipy.signal import savgol_filter
 
 from app.models.shot import BallPosition, BounceEvent, Shot
 
@@ -45,7 +46,6 @@ def segment_shots(
         return []
 
     pos_by_frame: dict[int, BallPosition] = {p.frame_idx: p for p in positions}
-    bounce_frames = {b.frame_idx for b in bounces}
     bounce_list = sorted(bounces, key=lambda b: b.frame_idx)
 
     # Build shot boundaries: between consecutive bounces

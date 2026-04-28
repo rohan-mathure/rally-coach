@@ -1,6 +1,7 @@
 import math
-import numpy as np
+
 import cv2
+import numpy as np
 from loguru import logger
 
 from pipeline.models.homography import CourtHomography
@@ -72,11 +73,11 @@ def detect_court(frame: np.ndarray) -> tuple[CourtHomography | None, float, np.n
 
     horizontal, vertical = _cluster_lines(lines)
     horizontal = _deduplicate_lines(
-        sorted(horizontal, key=lambda l: (l[1] + l[3]) / 2),
+        sorted(horizontal, key=lambda ln: (ln[1] + ln[3]) / 2),
         threshold_px=frame.shape[0] // 20,
     )
     vertical = _deduplicate_lines(
-        sorted(vertical, key=lambda l: (l[0] + l[2]) / 2),
+        sorted(vertical, key=lambda ln: (ln[0] + ln[2]) / 2),
         threshold_px=frame.shape[1] // 20,
     )
 
@@ -93,16 +94,16 @@ def detect_court(frame: np.ndarray) -> tuple[CourtHomography | None, float, np.n
         cv2.line(diagnostic, (line[0], line[1]), (line[2], line[3]), (255, 0, 0), 2)
 
     # Use outermost horizontal (near/far baselines) and outermost vertical (sidelines)
-    h_sorted = sorted(horizontal[:4], key=lambda l: (l[1] + l[3]) / 2)
-    v_sorted = sorted(vertical[:4], key=lambda l: (l[0] + l[2]) / 2)
+    h_sorted = sorted(horizontal[:4], key=lambda ln: (ln[1] + ln[3]) / 2)
+    v_sorted = sorted(vertical[:4], key=lambda ln: (ln[0] + ln[2]) / 2)
 
     near_baseline = h_sorted[0]
     far_baseline = h_sorted[-1]
     left_sideline = v_sorted[0]
     right_sideline = v_sorted[-1]
 
-    def to_seg(l):
-        return (l[0], l[1]), (l[2], l[3])
+    def to_seg(ln):
+        return (ln[0], ln[1]), (ln[2], ln[3])
 
     corners = [
         line_intersection(*to_seg(near_baseline), *to_seg(left_sideline)),

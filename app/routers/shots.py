@@ -1,6 +1,8 @@
 import json
-from fastapi import APIRouter, HTTPException
+
+from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
+
 from app.database import get_db
 
 router = APIRouter(prefix="/api/sessions", tags=["shots"])

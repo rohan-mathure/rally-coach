@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 from loguru import logger
 
-from app.models.shot import Shot, BallPosition
+from app.models.shot import BallPosition, Shot
 from pipeline.models.homography import CourtHomography
 
 TRAIL_LENGTH = 15
@@ -35,8 +35,11 @@ def _draw_hud(frame: np.ndarray, shot: Shot, fps: float) -> None:
 
 def _draw_court_overlay(frame: np.ndarray, homography: CourtHomography) -> None:
     from pipeline.utils.court_constants import (
-        SINGLES_HALF_WIDTH_FT, COURT_LENGTH_FT, HALF_COURT_FT,
-        SERVICE_LINE_Y_NEAR, SERVICE_LINE_FROM_NET_FT
+        COURT_LENGTH_FT,
+        HALF_COURT_FT,
+        SERVICE_LINE_FROM_NET_FT,
+        SERVICE_LINE_Y_NEAR,
+        SINGLES_HALF_WIDTH_FT,
     )
     lines_ft = [
         # baselines
