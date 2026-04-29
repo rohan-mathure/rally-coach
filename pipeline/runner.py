@@ -25,7 +25,7 @@ COURT_REVALIDATE_INTERVAL = 300   # frames
 
 
 async def _update_session(session_id: str, **kwargs) -> None:
-    async with await get_db() as db:
+    async with get_db() as db:
         set_clause = ", ".join(f"{k} = ?" for k in kwargs)
         values = list(kwargs.values()) + [session_id]
         await db.execute(
@@ -35,7 +35,7 @@ async def _update_session(session_id: str, **kwargs) -> None:
 
 
 async def _save_shots(shots: list[Shot]) -> None:
-    async with await get_db() as db:
+    async with get_db() as db:
         for shot in shots:
             await db.execute("""
                 INSERT OR REPLACE INTO shots (

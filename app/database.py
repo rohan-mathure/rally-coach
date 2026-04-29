@@ -1,12 +1,15 @@
+from contextlib import asynccontextmanager
+
 import aiosqlite
 
 from app.config import settings
 
 
-async def get_db() -> aiosqlite.Connection:
-    db = await aiosqlite.connect(settings.db_path)
-    db.row_factory = aiosqlite.Row
-    return db
+@asynccontextmanager
+async def get_db():
+    async with aiosqlite.connect(settings.db_path) as db:
+        db.row_factory = aiosqlite.Row
+        yield db
 
 
 async def init_db() -> None:

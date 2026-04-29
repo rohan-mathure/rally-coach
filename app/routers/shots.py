@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/sessions", tags=["shots"])
 
 @router.get("/{session_id}/shots")
 async def list_shots(session_id: str):
-    async with await get_db() as db:
+    async with get_db() as db:
         async with db.execute(
             "SELECT * FROM shots WHERE session_id = ? ORDER BY shot_number",
             (session_id,),
@@ -29,7 +29,7 @@ async def list_shots(session_id: str):
 
 @router.get("/{session_id}/shots/csv")
 async def export_shots_csv(session_id: str):
-    async with await get_db() as db:
+    async with get_db() as db:
         async with db.execute(
             """SELECT shot_number, start_time_sec, shot_type, spin_type,
                       speed_mph, cleared_net, is_in, is_close_call,

@@ -58,9 +58,25 @@ jobs:
           cache: pip
 
       - name: Install test dependencies
-        # Uses the [test] extra — only filterpy/numpy/scipy/pytest.
-        # Skips heavy CV stack (ultralytics, mediapipe, opencv) to keep CI fast.
         run: pip install -e ".[test]"
 
       - name: Run tests
         run: pytest tests/ -v --tb=short
+
+  test-desktop:
+    name: Test Desktop (Vitest)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        working-directory: desktop
+        run: npm ci
+
+      - name: Run tests
+        working-directory: desktop
+        run: npm test

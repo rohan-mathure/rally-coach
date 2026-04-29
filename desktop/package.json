@@ -15,7 +15,9 @@
     "package": "npm run build && electron-builder",
     "package:mac": "npm run build && electron-builder --mac",
     "package:win": "npm run build && electron-builder --win",
-    "package:linux": "npm run build && electron-builder --linux"
+    "package:linux": "npm run build && electron-builder --linux",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "axios": "^1.7.2",
@@ -38,7 +40,14 @@
     "eslint": "^9.6.0",
     "globals": "^15.15.0",
     "typescript": "^5.5.2",
-    "vite": "^5.3.1"
+    "vite": "^5.3.1",
+    "vitest": "^2.0.0",
+    "@vitest/ui": "^2.0.0",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.0",
+    "@testing-library/jest-dom": "^6.4.0",
+    "jsdom": "^24.0.0",
+    "axios-mock-adapter": "^2.0.0"
   },
   "build": {
     "appId": "com.rallycoach.app",

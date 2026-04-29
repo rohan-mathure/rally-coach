@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/sessions", tags=["video"])
 
 @router.get("/{session_id}/video")
 async def get_video(session_id: str):
-    async with await get_db() as db:
+    async with get_db() as db:
         async with db.execute(
             "SELECT processed_video_path, status FROM sessions WHERE session_id = ?",
             (session_id,),

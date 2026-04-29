@@ -16,7 +16,7 @@ def _row_to_dict(row) -> dict:
 
 @router.get("")
 async def list_sessions():
-    async with await get_db() as db:
+    async with get_db() as db:
         async with db.execute(
             "SELECT * FROM sessions ORDER BY uploaded_at DESC"
         ) as cursor:
@@ -26,7 +26,7 @@ async def list_sessions():
 
 @router.get("/{session_id}")
 async def get_session(session_id: str):
-    async with await get_db() as db:
+    async with get_db() as db:
         async with db.execute(
             "SELECT * FROM sessions WHERE session_id = ?", (session_id,)
         ) as cursor:
@@ -52,7 +52,7 @@ async def manual_calibrate(session_id: str, corners: list[list[float]]):
     dst = np.array(ITF_CORNERS_FEET, dtype=np.float32)
     H, _ = cv2.findHomography(src, dst)
 
-    async with await get_db() as db:
+    async with get_db() as db:
         await db.execute(
             "UPDATE sessions SET homography_matrix = ? WHERE session_id = ?",
             (json.dumps(H.tolist()), session_id),

@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
 
 async def _save_session(session: Session) -> None:
-    async with await get_db() as db:
+    async with get_db() as db:
         await db.execute(
             """INSERT INTO sessions
                (session_id, filename, uploaded_at, status)
