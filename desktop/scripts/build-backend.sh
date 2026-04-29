@@ -30,6 +30,11 @@ fi
 
 mkdir -p "$OUT_DIR"
 
+# Python gives us OS-native paths and the correct separator (: on Unix, ; on Windows)
+SEP="$(python3 -c "import os; print(os.pathsep)")"
+APP_DATA="$(python3 -c "import os; print(os.path.abspath('app'))")"
+PIPELINE_DATA="$(python3 -c "import os; print(os.path.abspath('pipeline'))")"
+
 pyinstaller \
   --noconfirm \
   --onefile \
@@ -62,8 +67,9 @@ pyinstaller \
   --collect-all "ultralytics" \
   --collect-all "mediapipe" \
   --collect-all "cv2" \
-  --add-data "$REPO_ROOT/app:app" \
-  --add-data "$REPO_ROOT/pipeline:pipeline" \
+  --exclude-module "mediapipe.tasks.python.genai" \
+  --add-data "${APP_DATA}${SEP}app" \
+  --add-data "${PIPELINE_DATA}${SEP}pipeline" \
   server.py
 
 echo ""
