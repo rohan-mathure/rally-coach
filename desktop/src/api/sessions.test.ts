@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import MockAdapter from "axios-mock-adapter";
-import client, { getBaseURL } from "@/api/client";
+import client from "@/api/client";
 import {
   listSessions,
   getSession,

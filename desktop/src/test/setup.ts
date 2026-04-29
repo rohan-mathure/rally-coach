@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom";
+import { vi } from "vitest";
 
 // Stub Electron bridge for all renderer tests.
 Object.defineProperty(window, "electronAPI", {

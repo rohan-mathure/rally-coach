@@ -1,6 +1,6 @@
 import uuid
 
-from pytest_bdd import given, parsers, scenarios, then, when
+from pytest_bdd import given, scenarios, then, when
 
 scenarios("inout_classification.feature")
 

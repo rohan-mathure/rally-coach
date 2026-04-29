@@ -1,5 +1,3 @@
-import numpy as np
-import pytest
 from pytest_bdd import given, scenarios, then, when
 
 scenarios("bounce_detection.feature")

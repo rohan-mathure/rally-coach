@@ -1,4 +1,3 @@
-import pytest
 from pytest_bdd import given, scenarios, then, when
 
 scenarios("shot_segmentation.feature")

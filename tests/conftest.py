@@ -8,9 +8,9 @@ import pytest
 @pytest.fixture
 def tmp_db_settings(tmp_path, monkeypatch):
     """Patches settings in all modules that import it. Returns Settings object."""
-    from app.config import Settings
     import app.database
     import app.routers.upload
+    from app.config import Settings
 
     new_settings = Settings(storage_dir=str(tmp_path))
     monkeypatch.setattr(app.database, "settings", new_settings)
@@ -22,6 +22,7 @@ def tmp_db_settings(tmp_path, monkeypatch):
 def app_client(tmp_db_settings, monkeypatch):
     """Sync TestClient; ASGI lifespan runs init_db() on enter."""
     from starlette.testclient import TestClient
+
     import app.routers.upload
 
     async def _noop_pipeline(*args, **kwargs):
@@ -100,6 +101,7 @@ def make_homography():
     """
     import cv2
     import numpy as np
+
     from pipeline.models.homography import CourtHomography
 
     src = np.array([[80, 450], [560, 450], [560, 50], [80, 50]], dtype=np.float32)

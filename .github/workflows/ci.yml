@@ -60,8 +60,15 @@ jobs:
       - name: Install test dependencies
         run: pip install -e ".[test]"
 
-      - name: Run tests
-        run: pytest tests/ -v --tb=short
+      - name: Run tests with coverage
+        run: pytest tests/ -v --tb=short --cov=app --cov=pipeline --cov-report=xml --cov-report=term-missing
+
+      - name: Upload Python coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          flags: python
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   test-desktop:
     name: Test Desktop (Vitest)
@@ -77,6 +84,13 @@ jobs:
         working-directory: desktop
         run: npm ci
 
-      - name: Run tests
+      - name: Run tests with coverage
         working-directory: desktop
-        run: npm test
+        run: npm run test:coverage
+
+      - name: Upload TypeScript coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: desktop/coverage/lcov.info
+          flags: typescript
+          token: ${{ secrets.CODECOV_TOKEN }}
