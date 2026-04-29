@@ -1,5 +1,7 @@
 # Rally Coach
 
+[![codecov](https://codecov.io/gh/rohan-mathure/rally-coach/branch/main/graph/badge.svg?token=NYNRYYSPHW)](https://codecov.io/gh/rohan-mathure/rally-coach)
+
 Analyze tennis sessions from iPhone video. Upload a match recording and get back an annotated video plus a web dashboard with shot-by-shot stats.
 
 ## What it does

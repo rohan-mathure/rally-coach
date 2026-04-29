@@ -22,3 +22,8 @@ weights/*.onnx
 # test fixtures (large files)
 tests/fixtures/*.mp4
 tests/fixtures/*.avi
+
+# coverage artifacts
+coverage.xml
+.coverage
+htmlcov/
