@@ -62,8 +62,8 @@ pyinstaller \
   --collect-all "ultralytics" \
   --collect-all "mediapipe" \
   --collect-all "cv2" \
-  --add-data "app:app" \
-  --add-data "pipeline:pipeline" \
+  --add-data "$REPO_ROOT/app:app" \
+  --add-data "$REPO_ROOT/pipeline:pipeline" \
   server.py
 
 echo ""
