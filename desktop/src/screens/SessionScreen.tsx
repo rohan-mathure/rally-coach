@@ -191,7 +191,23 @@ export function SessionScreen() {
             <div className="detail-grid">
               <div className="card" style={{ alignSelf: "start" }}>
                 <div className="card-title">Bounce Locations</div>
-                <CourtMap shots={shots} activeShot={activeShot?.shot_id} onSelectShot={handleSelectShot} />
+                <CourtMap
+                  shots={shots}
+                  activeShot={activeShot?.shot_id}
+                  onSelectShot={(shot) => setActiveShot(shot)}
+                />
+                {activeShot && (
+                  <div style={{ marginTop: 10, fontSize: 12, color: "var(--muted)", textAlign: "center" }}>
+                    Shot #{activeShot.shot_number} selected —{" "}
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: 11, padding: "2px 8px" }}
+                      onClick={() => handleSelectShot(activeShot)}
+                    >
+                      Watch in video
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="card" style={{ padding: 0 }}>
                 <div className="flex-between" style={{ padding: "14px 16px" }}>
