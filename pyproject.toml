@@ -63,3 +63,6 @@ ignore = ["E501"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 bdd_features_base_dir = "tests/features"
+markers = [
+    "slow: marks tests as slow (run with -m slow or --run-slow)",
+]

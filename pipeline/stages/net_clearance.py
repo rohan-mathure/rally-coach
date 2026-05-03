@@ -4,6 +4,13 @@ from app.models.shot import Shot
 from pipeline.models.homography import CourtHomography
 from pipeline.utils.court_constants import HALF_COURT_FT, NET_HEIGHT_CENTER_FT
 
+# Hard limits for sanity-checking the computed clearance.
+# The net is 3 ft tall; realistic clearances are −12" (into net) to +240" (high lob).
+# Values outside this range indicate the ball trajectory didn't actually cross the net
+# or the pixel-scale estimate is unreliable, so we discard the result.
+_CLEARANCE_MIN_IN = -12.0
+_CLEARANCE_MAX_IN = 240.0
+
 
 def compute_net_clearance(shots: list[Shot], homography: CourtHomography | None) -> list[Shot]:
     if homography is None:
@@ -71,8 +78,14 @@ def compute_net_clearance(shots: list[Shot], homography: CourtHomography | None)
         clearance_px = net_top_pixel_y - ball_y_at_net   # positive = cleared
         clearance_ft = clearance_px * feet_per_px
         clearance_inches = clearance_ft * 12.0
-        cleared = clearance_inches > 0
 
+        # The ground-plane pixel scale is a rough proxy for height; discard values
+        # that fall outside the physically plausible range.
+        if not (_CLEARANCE_MIN_IN <= clearance_inches <= _CLEARANCE_MAX_IN):
+            updated.append(shot)
+            continue
+
+        cleared = clearance_inches > 0
         updated.append(shot.model_copy(update={
             "net_clearance_inches": round(clearance_inches, 1),
             "cleared_net": cleared,

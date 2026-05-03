@@ -19,9 +19,9 @@ def _cluster_lines(lines: np.ndarray) -> tuple[list, list]:
     horizontal, vertical = [], []
     for line in lines:
         angle = abs(_angle(line[0])) % 180
-        if angle < 30 or angle > 150:
+        if angle < 25 or angle > 155:
             horizontal.append(line[0])
-        elif 60 < angle < 120:
+        elif 45 < angle < 135:
             vertical.append(line[0])
     return horizontal, vertical
 
@@ -60,9 +60,9 @@ def detect_court(frame: np.ndarray) -> tuple[CourtHomography | None, float, np.n
         edges,
         rho=1,
         theta=np.pi / 180,
-        threshold=80,
-        minLineLength=frame.shape[1] // 8,
-        maxLineGap=20,
+        threshold=60,
+        minLineLength=frame.shape[1] // 12,
+        maxLineGap=30,
     )
 
     diagnostic = frame.copy()

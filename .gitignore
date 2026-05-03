@@ -23,6 +23,9 @@ weights/*.onnx
 tests/fixtures/*.mp4
 tests/fixtures/*.avi
 
+# ultralytics training runs
+runs/
+
 # coverage artifacts
 coverage.xml
 .coverage

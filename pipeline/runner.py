@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
+from typing import Generator
 
+import numpy as np
 from loguru import logger
 
 from app.config import settings
@@ -22,6 +24,47 @@ from pipeline.stages.spin_analyzer import analyze_spin
 from pipeline.utils.video_io import VideoReader
 
 COURT_REVALIDATE_INTERVAL = 300   # frames
+_COURT_MIN_INLIER_RATIO = 0.6
+_COURT_EARLY_EXIT_RATIO = 0.9
+
+
+def _pick_best_homography(
+    video_path: Path,
+    total_frames: int,
+) -> tuple:
+    """Sample several frames and return (homography, inlier_ratio) for the best one.
+
+    Returns homography=None when the best ratio is below _COURT_MIN_INLIER_RATIO.
+    """
+    best_ratio = 0.0
+    best_homography = None
+    sample_frames = [30, 0, 60, 120, 300, total_frames // 20, total_frames // 10]
+    with VideoReader(video_path) as reader:
+        for frame_num in dict.fromkeys(sample_frames):  # deduplicate, preserve order
+            frame = reader.read_frame(frame_num)
+            if frame is None:
+                continue
+            h, ratio, _ = detect_court(frame)
+            logger.debug(f"Court detection frame {frame_num}: inlier_ratio={ratio:.2f}")
+            if ratio > best_ratio:
+                best_ratio = ratio
+                best_homography = h if ratio >= _COURT_MIN_INLIER_RATIO else None
+            if best_ratio >= _COURT_EARLY_EXIT_RATIO:
+                break
+    return best_homography, best_ratio
+
+
+def _with_progress(
+    frames_gen: Generator[tuple[int, np.ndarray], None, None],
+    total: int,
+    label: str,
+) -> Generator[tuple[int, np.ndarray], None, None]:
+    log_every = max(1, total // 10)
+    for idx, frame in frames_gen:
+        if idx > 0 and idx % log_every == 0:
+            pct = min(100, idx * 100 // total)
+            logger.info(f"{label}: frame {idx}/{total} ({pct}%)")
+        yield idx, frame
 
 
 async def _update_session(session_id: str, **kwargs) -> None:
@@ -77,7 +120,8 @@ async def run(session_id: str, video_path: Path) -> None:
 async def _run_pipeline(session_id: str, video_path: Path) -> None:
     await _update_session(session_id, status="processing")
 
-    # Stage 1: metadata
+    # Stage 1/13: metadata
+    logger.info("Stage 1/13: extracting metadata")
     meta = extract_metadata(video_path)
     fps = meta["fps"] or 60.0
     await _update_session(session_id,
@@ -86,70 +130,78 @@ async def _run_pipeline(session_id: str, video_path: Path) -> None:
         width=meta["width"],
         height=meta["height"],
     )
-    logger.info(f"Video: {meta['total_frames']} frames @ {fps}fps, {meta['width']}x{meta['height']}")
+    logger.info(f"Stage 1/13: {meta['total_frames']} frames @ {fps}fps, {meta['width']}x{meta['height']}")
 
-    # Stage 2: court detection on frame ~30
-    homography = None
+    # Stage 2/13: court detection — sample several frames and keep the best result
+    logger.info("Stage 2/13: court detection")
+    homography, best_inlier_ratio = _pick_best_homography(video_path, meta["total_frames"])
+    if best_inlier_ratio < _COURT_MIN_INLIER_RATIO:
+        logger.warning(
+            f"Court detection low confidence ({best_inlier_ratio:.2f}); proceeding without homography"
+        )
+    else:
+        logger.info(f"Stage 2/13: court detected (inlier_ratio={best_inlier_ratio:.2f})")
+        await _update_session(session_id, homography_matrix=json.dumps(homography.to_list()))
+
+    # Stage 3/13: ball tracking (full video pass)
+    logger.info(f"Stage 3/13: ball tracking ({meta['total_frames']} frames)")
     with VideoReader(video_path) as reader:
-        sample_frame = reader.read_frame(30) or reader.read_frame(0)
+        all_positions = track_balls(
+            _with_progress(reader.frames(), total=meta["total_frames"], label="Stage 3/13"),
+            fps=fps,
+            weights_dir=settings.weights_dir,
+        )
 
-    if sample_frame is not None:
-        homography, inlier_ratio, _ = detect_court(sample_frame)
-        if inlier_ratio < 0.6:
-            logger.warning(f"Court detection low confidence ({inlier_ratio:.2f}); proceeding without homography")
-            homography = None
-        else:
-            logger.info(f"Court detected (inlier_ratio={inlier_ratio:.2f})")
-            await _update_session(session_id, homography_matrix=json.dumps(homography.to_list()))
+    logger.info(f"Stage 3/13: tracked {len(all_positions)} ball positions")
 
-    # Stage 3: ball tracking (full video pass)
-    logger.info("Stage 3: ball tracking...")
-    with VideoReader(video_path) as reader:
-        all_positions = track_balls(reader.frames(), fps=fps, weights_dir=settings.weights_dir)
-
-    logger.info(f"Tracked {len(all_positions)} ball positions")
-
-    if not all_positions:
-        await _update_session(session_id, status="error", error_message="No ball detected in video")
+    real_detections = sum(1 for p in all_positions if not p.is_interpolated)
+    if not all_positions or real_detections == 0:
+        await _update_session(
+            session_id, status="error",
+            error_message="No ball detected — custom YOLO weights (yolov8n_tennis_ball.pt) are required for reliable detection",
+        )
         return
 
-    # Stage 4: bounce detection
-    logger.info("Stage 4: bounce detection...")
+    # Stage 4/13: bounce detection
+    logger.info("Stage 4/13: bounce detection")
     bounces = detect_bounces(all_positions, homography, frame_height=meta["height"])
+    logger.info(f"Stage 4/13: detected {len(bounces)} bounces")
 
-    # Stage 5: shot segmentation
-    logger.info("Stage 5: shot segmentation...")
+    # Stage 5/13: shot segmentation
+    logger.info("Stage 5/13: shot segmentation")
     shots = segment_shots(all_positions, bounces, fps=fps, session_id=session_id)
 
     if not shots:
         await _update_session(session_id, status="error", error_message="No shots detected")
         return
 
-    # Stage 9 (speed) before spin so spin can use speed
-    logger.info("Stage 9: speed estimation...")
+    logger.info(f"Stage 5/13: segmented {len(shots)} shots")
+
+    # Stage 6/13: speed estimation (before spin so spin can use speed)
+    logger.info("Stage 6/13: speed estimation")
     shots = estimate_speeds(shots, fps=fps, homography=homography,
                              frame_width=meta["width"], frame_height=meta["height"])
 
-    # Stage 8: spin analysis (requires speed)
-    logger.info("Stage 8: spin analysis...")
+    # Stage 7/13: spin analysis (requires speed)
+    logger.info("Stage 7/13: spin analysis")
     shots = analyze_spin(shots, fps=fps)
 
-    # Stage 10: net clearance
-    logger.info("Stage 10: net clearance...")
+    # Stage 8/13: net clearance
+    logger.info("Stage 8/13: net clearance")
     shots = compute_net_clearance(shots, homography)
 
-    # Stage 11: in/out classification
-    logger.info("Stage 11: in/out classification...")
+    # Stage 9/13: in/out classification
+    logger.info("Stage 9/13: in/out classification")
     shots = classify_inout(shots, homography)
 
-    # Stage 6+7: pose extraction + shot classification
-    logger.info("Stage 6+7: pose + shot classification...")
+    # Stage 10+11/13: pose extraction + shot classification
+    logger.info("Stage 10+11/13: pose extraction + shot classification")
     with VideoReader(video_path) as reader:
         shots = extract_poses(shots, reader)
     shots = classify_shots(shots, homography)
 
-    # Stage 12: quality scores
-    logger.info("Stage 12: quality scores...")
+    # Stage 12/13: quality scores
+    logger.info("Stage 12/13: quality scores")
     shots = compute_quality_scores(shots)
 
     # Save shots to DB
@@ -166,8 +218,8 @@ async def _run_pipeline(session_id: str, video_path: Path) -> None:
         avg_quality_score=round(sum(qualities) / len(qualities), 1) if qualities else None,
     )
 
-    # Stage 13: annotate video
-    logger.info("Stage 13: annotating video...")
+    # Stage 13/13: annotate video
+    logger.info("Stage 13/13: annotating video")
     annotate_video(
         input_path=video_path,
         output_path=output_path,

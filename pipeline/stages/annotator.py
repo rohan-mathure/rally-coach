@@ -77,8 +77,9 @@ def annotate_video(
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    tmp_path = output_path.with_suffix(".avi")
-    writer = cv2.VideoWriter(str(tmp_path), cv2.VideoWriter_fourcc(*"XVID"), fps, (width, height))
+    # Write directly to MP4 (mp4v codec, no ffmpeg required).
+    # _try_reencode_h264 upgrades to H.264 in-place if ffmpeg is available.
+    writer = cv2.VideoWriter(str(output_path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height))
 
     # Index shots by frame range for O(1) lookup
     shot_by_frame: dict[int, Shot] = {}
@@ -144,20 +145,21 @@ def annotate_video(
     cap.release()
     writer.release()
 
-    # Re-encode to H.264 MP4 for browser compatibility
-    _reencode_h264(tmp_path, output_path)
-    tmp_path.unlink(missing_ok=True)
+    _try_reencode_h264(output_path)
     logger.info(f"Annotated video saved: {output_path}")
 
 
-def _reencode_h264(src: Path, dst: Path) -> None:
+def _try_reencode_h264(path: Path) -> None:
+    """Re-encode to H.264 in-place if ffmpeg is available; otherwise keep mp4v."""
+    tmp = path.with_suffix(".tmp.mp4")
     try:
         subprocess.run(
-            ["ffmpeg", "-y", "-i", str(src), "-vcodec", "libx264", "-crf", "23",
-             "-preset", "fast", "-movflags", "+faststart", str(dst)],
+            ["ffmpeg", "-y", "-i", str(path), "-vcodec", "libx264", "-crf", "23",
+             "-preset", "fast", "-movflags", "+faststart", str(tmp)],
             check=True, capture_output=True,
         )
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        logger.warning(f"ffmpeg re-encode failed: {e}. Copying AVI as fallback.")
-        import shutil
-        shutil.copy(src, dst.with_suffix(".avi"))
+        tmp.replace(path)
+        logger.info("Re-encoded to H.264")
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        tmp.unlink(missing_ok=True)
+        logger.info("ffmpeg not available; output uses mp4v codec (run: brew install ffmpeg for H.264)")

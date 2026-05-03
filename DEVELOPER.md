@@ -63,14 +63,33 @@ rally-coach/
 ## Dev setup
 
 ```bash
-pip install -e ".[dev]"
+# System dependencies (macOS)
+brew install ffmpeg
+
+# Python dependencies
+uv sync --extra dev
 cp .env.example .env
-uvicorn app.main:app --reload --port 8000
+uv run uvicorn app.main:app --reload --port 8000
 ```
 
 Run tests:
 ```bash
-pytest tests/ -v
+uv run pytest tests/ -v
+```
+
+### Model files
+
+The ball detector and pose landmarker are downloaded automatically on first use:
+
+| File | Downloaded by | Destination |
+|------|--------------|-------------|
+| `yolov8n.pt` | ultralytics | project root (auto) |
+| `yolov8n_tennis_ball.pt` | `scripts/train_ball_detector.py` | `weights/` |
+| `pose_landmarker_lite.task` | `pose_analyzer.py` on first run | `weights/` |
+
+To retrain the ball detector from the bundled dataset:
+```bash
+uv run python scripts/train_ball_detector.py --epochs 100 --device mps
 ```
 
 ## Pipeline architecture
@@ -222,5 +241,5 @@ The default COCO "sports ball" weights miss fast balls and small balls at distan
 | `fastapi` + `uvicorn` | Async web server |
 | `aiosqlite` | Async SQLite |
 | `pydantic` | Data models and validation |
-| `ffmpeg-python` | H.264 re-encode for browser playback |
+| `ffmpeg` (system) | H.264 re-encode for browser playback (`brew install ffmpeg`) |
 | `loguru` | Structured logging |
